@@ -23,14 +23,19 @@ export interface Abdulrcrtw1000DecryptAttempt {
   error?: string;
 }
 
-export type Abdulrcrtw1000DecryptFn = (key: Abdulrcrtw1000KeyMaterial, envelope: Abdulrcrtw1000CipherEnvelope) => string;
+export type Abdulrcrtw1000DecryptFn = (
+  key: Abdulrcrtw1000KeyMaterial,
+  envelope: Abdulrcrtw1000CipherEnvelope,
+) => string;
 
 export function abdulrcrtw1000SelectVerificationKeys(
   keys: Abdulrcrtw1000KeyMaterial[],
   envelope: Abdulrcrtw1000CipherEnvelope,
 ): Abdulrcrtw1000KeyMaterial[] {
   if (envelope.kid) {
-    const match = keys.find((k) => k.kid === envelope.kid && k.status !== 'retired');
+    const match = keys.find(
+      (k) => k.kid === envelope.kid && k.status !== 'retired',
+    );
     return match ? [match] : [];
   }
   // No kid: try current first, then previous (overlap window), never retired.
@@ -43,7 +48,11 @@ export function abdulrcrtw1000DecryptWithDualKey(
   keys: Abdulrcrtw1000KeyMaterial[],
   envelope: Abdulrcrtw1000CipherEnvelope,
   decrypt: Abdulrcrtw1000DecryptFn,
-): { plaintext: string; usedKid: string; attempts: Abdulrcrtw1000DecryptAttempt[] } {
+): {
+  plaintext: string;
+  usedKid: string;
+  attempts: Abdulrcrtw1000DecryptAttempt[];
+} {
   const candidates = abdulrcrtw1000SelectVerificationKeys(keys, envelope);
   if (candidates.length === 0) {
     throw new Error('NO_USABLE_DECRYPTION_KEY');
@@ -55,13 +64,20 @@ export function abdulrcrtw1000DecryptWithDualKey(
       attempts.push({ kid: key.kid, ok: true });
       return { plaintext, usedKid: key.kid, attempts };
     } catch (e) {
-      attempts.push({ kid: key.kid, ok: false, error: e instanceof Error ? e.message : 'decrypt_failed' });
+      attempts.push({
+        kid: key.kid,
+        ok: false,
+        error: e instanceof Error ? e.message : 'decrypt_failed',
+      });
     }
   }
   throw new Error('DECRYPTION_FAILED_WITH_ALL_KEYS');
 }
 
-export function abdulrcrtw1000NeedsReencrypt(usedKid: string, keys: Abdulrcrtw1000KeyMaterial[]): boolean {
+export function abdulrcrtw1000NeedsReencrypt(
+  usedKid: string,
+  keys: Abdulrcrtw1000KeyMaterial[],
+): boolean {
   const current = keys.find((k) => k.status === 'current');
   return !!current && usedKid !== current.kid;
 }

@@ -5,12 +5,14 @@ a random data key on startup when KMS key env vars are absent, making previously
 encrypted secrets undecryptable after restart.
 
 ## Problem
+
 - Ephemeral/in-memory data key generation on each process start means any secret
   encrypted with the prior key cannot be decrypted after a restart or redeploy.
 - Encrypted-at-rest data (e.g. webhook secrets, other sensitive fields) becomes
   permanently unreadable unless the key material is durably persisted and loaded.
 
 ## Expected behavior
+
 - **Production:** encryption keys must come from stable configuration or a KMS
   (env/secret manager/HSM/KMS) so the same logical key (or versioned key set) is
   available across restarts and instances.
@@ -22,6 +24,7 @@ encrypted secrets undecryptable after restart.
   for durable/persisted secrets.
 
 ## Mitigations / recommendations
+
 1. Require `ENCRYPTION_KEY`/KMS configuration in staging/production; refuse to
    boot without it (or without a configured KMS provider).
 2. Support key versioning/identifiers (`kid`) in ciphertext envelopes so future
